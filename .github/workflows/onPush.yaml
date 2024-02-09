@@ -1,0 +1,13 @@
+on: 
+  push:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup Go
+        uses: actions/setup-go@v4
+      # You can test your matrix by printing the current Go version
+      - name: Display Go version
+        run: go version

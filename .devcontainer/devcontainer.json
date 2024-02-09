@@ -2,5 +2,12 @@
 // README at: https://github.com/devcontainers/templates/tree/main/src/go
 {
 	"name": "Go",
-	"image": "mcr.microsoft.com/devcontainers/go:1-1.21-bullseye"
+	"image": "mcr.microsoft.com/devcontainers/go:1-1.21-bullseye",
+	"customizations": {
+		"vscode": {
+			"extensions": [
+				"github.vscode-github-actions"
+			]
+		}
+	}
 }
