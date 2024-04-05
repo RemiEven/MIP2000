@@ -2,12 +2,24 @@ package api
 
 import (
 	"encoding/json"
+	"io"
+	"io/fs"
 	"log/slog"
 	"net/http"
+
+	"github.com/remieven/mip2000/memeselector"
 )
 
-func coucou(responseWriter http.ResponseWriter, _ *http.Request) {
-	responseWriter.Write([]byte("hello, coucou"))
+func image(readDirFileSystem fs.ReadDirFS) func(responseWriter http.ResponseWriter, _ *http.Request) {
+	return func(responseWriter http.ResponseWriter, _ *http.Request) {
+		meme, err := memeselector.GetRandomMeme(readDirFileSystem)
+		if err != nil {
+			responseWriter.WriteHeader(http.StatusInternalServerError)
+			responseWriter.Write([]byte(err.Error()))
+			return
+		}
+		io.Copy(responseWriter, meme)
+	}
 }
 
 type ErrorResponse struct {
@@ -25,9 +37,9 @@ func notFound(responseWriter http.ResponseWriter, _ *http.Request) {
 	}
 }
 
-func NewRouter() http.Handler {
+func NewRouter(readDirFileSystem fs.ReadDirFS) http.Handler {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/coucou", coucou)
+	mux.HandleFunc("/image", image(readDirFileSystem))
 	mux.HandleFunc("/", notFound)
 	return mux
 }

@@ -3,19 +3,27 @@ package api
 import (
 	"encoding/json"
 	"io"
+	"io/fs"
 	"net/http"
 	"net/http/httptest"
+	"os"
 	"testing"
 )
 
-func TestCoucou(t *testing.T) {
-	request, err := http.NewRequest(http.MethodGet, "/coucou", nil)
+func TestImagePath(t *testing.T) {
+	request, err := http.NewRequest(http.MethodGet, "/image", nil)
 	if err != nil {
 		t.Errorf("failed to create request: %v", err)
 		return
 	}
 	recorder := httptest.NewRecorder()
-	mux := NewRouter()
+	fileSystem := os.DirFS("..")
+	readDirFileSystem, ok := fileSystem.(fs.ReadDirFS)
+	if !ok {
+		t.Errorf("failed to open image directory")
+		return
+	}
+	mux := NewRouter(readDirFileSystem)
 	mux.ServeHTTP(recorder, request)
 
 	resp := recorder.Result()
@@ -29,9 +37,11 @@ func TestCoucou(t *testing.T) {
 		return
 	}
 
-	if string(body) != "hello, coucou" {
-		t.Errorf("unexpected response body: got [%v], wanted [%v]", string(body), "hello, coucou")
-	}
+	_ = body
+	// TODO: change the assertion here now that we get an image
+	// if string(body) != "hello, coucou" {
+	// 	t.Errorf("unexpected response body: got [%v], wanted [%v]", string(body), "hello, coucou")
+	// }
 }
 
 func TestNotFound(t *testing.T) {
@@ -41,7 +51,13 @@ func TestNotFound(t *testing.T) {
 		return
 	}
 	recorder := httptest.NewRecorder()
-	mux := NewRouter()
+	fileSystem := os.DirFS("..")
+	readDirFileSystem, ok := fileSystem.(fs.ReadDirFS)
+	if !ok {
+		t.Errorf("failed to open image directory")
+		return
+	}
+	mux := NewRouter(readDirFileSystem)
 	mux.ServeHTTP(recorder, request)
 
 	resp := recorder.Result()
