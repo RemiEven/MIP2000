@@ -8,6 +8,8 @@ import (
 	"net/http/httptest"
 	"os"
 	"testing"
+
+	"github.com/go-test/deep"
 )
 
 func TestImagePath(t *testing.T) {
@@ -17,7 +19,7 @@ func TestImagePath(t *testing.T) {
 		return
 	}
 	recorder := httptest.NewRecorder()
-	fileSystem := os.DirFS("..")
+	fileSystem := os.DirFS("./testdata/")
 	readDirFileSystem, ok := fileSystem.(fs.ReadDirFS)
 	if !ok {
 		t.Errorf("failed to open image directory")
@@ -37,11 +39,23 @@ func TestImagePath(t *testing.T) {
 		return
 	}
 
-	_ = body
-	// TODO: change the assertion here now that we get an image
-	// if string(body) != "hello, coucou" {
-	// 	t.Errorf("unexpected response body: got [%v], wanted [%v]", string(body), "hello, coucou")
-	// }
+	expectedFile, err := os.Open("./testdata/images/1000000845.jpg")
+	if err != nil {
+		t.Errorf("failed to open expected file: %v", err)
+		return
+	}
+	expected, err := io.ReadAll(expectedFile)
+
+	if err != nil {
+		t.Errorf("failed to read expected file: %v", err)
+		return
+	}
+
+	if diff := deep.Equal(body, expected); diff != nil {
+		t.Errorf("unexpected response body: %v", diff)
+		return
+	}
+
 }
 
 func TestNotFound(t *testing.T) {
