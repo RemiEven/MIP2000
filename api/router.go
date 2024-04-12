@@ -15,7 +15,13 @@ func image(readDirFileSystem fs.ReadDirFS) func(responseWriter http.ResponseWrit
 		meme, err := memeselector.GetRandomMeme(readDirFileSystem)
 		if err != nil {
 			responseWriter.WriteHeader(http.StatusInternalServerError)
-			responseWriter.Write([]byte(err.Error()))
+			encoder := json.NewEncoder(responseWriter)
+			errorResponse := ErrorResponse{
+				Code: "internal-server-error",
+			}
+			if err := encoder.Encode(errorResponse); err != nil {
+				slog.Error("failed to encode error response", err)
+			}
 			return
 		}
 		io.Copy(responseWriter, meme)
